@@ -71,6 +71,7 @@ while true; do
     openvpn --config "$ovpn" \
       --auth-user-pass "$VG/auth.txt" \
       --redirect-gateway def1 \
+      --verb 4 \
       --daemon --writepid "$VG/ovpn.pid" --log "$VG/ovpn.log" \
       || { log "openvpn failed to start"; continue; }
 
@@ -80,7 +81,8 @@ while true; do
       sleep 1
     done
     if [ "$ok" -ne 1 ]; then
-      log "tun0 never came up for $ip"
+      log "tun0 never came up for $ip; openvpn log tail:"
+      tail -n 25 "$VG/ovpn.log" 2>/dev/null | sed 's/^/[ovpn] /'
       continue
     fi
 
@@ -95,6 +97,7 @@ while true; do
       cc="$(exit_country)"
       if [ "$cc" = "$COUNTRY" ]; then
         fails=0
+        [ "$((RANDOM % 6))" -eq 0 ] && log "tunnel healthy via $ip (exit $cc)"
       else
         fails=$((fails + 1))
         log "healthcheck abnormal (country='$cc') fail#$fails"
