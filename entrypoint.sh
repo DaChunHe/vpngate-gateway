@@ -50,17 +50,18 @@ while true; do
   stop_all
   kill_switch_off
   log "fetching VPN Gate $COUNTRY servers..."
-  if ! python3 /app/pick.py "$COUNTRY" "$VG" > "$VG/ips.txt" 2>"$VG/pick.err"; then
-    log "fetch failed: $(cat "$VG/pick.err" 2>/dev/null)"
+  if ! python3 /app/pick.py "$COUNTRY" "$VG" > "$VG/ips.txt"; then
+    log "fetch failed, retry in 60s"
     sleep 60
     continue
   fi
-  mapfile -t IPS < <(grep -v '^WROTE=' "$VG/ips.txt" 2>/dev/null)
-  log "got ${#IPS[@]} $COUNTRY server(s)"
+  mapfile -t IPS < <(grep -v '^WROTE=' "$VG/ips.txt" 2>/dev/null | grep .)
   if [ "${#IPS[@]}" -eq 0 ]; then
+    log "no $COUNTRY servers in list right now, retry in 120s"
     sleep 120
     continue
   fi
+  log "got ${#IPS[@]} $COUNTRY server(s): ${IPS[*]}"
 
   for ip in "${IPS[@]}"; do
     ovpn="$VG/srv-${ip}.ovpn"
