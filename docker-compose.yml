@@ -1,0 +1,16 @@
+services:
+  gateway:
+    build: .
+    image: vpngate-gateway:latest
+    container_name: vg-gateway
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    ports:
+      - "1080:1080"
+    environment:
+      COUNTRY: ${COUNTRY:-US}
+      PROXY_USER: ${PROXY_USER:?set PROXY_USER in .env}
+      PROXY_PASS: ${PROXY_PASS:?set PROXY_PASS in .env}
+    restart: unless-stopped
